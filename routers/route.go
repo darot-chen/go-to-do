@@ -6,7 +6,7 @@ import (
 )
 
 func SetupRoute(app fiber.Router) {
-	api := app.Group("/api")
+	api := app.Group("/api/todo")
 
 	api.Get("/", handler.GetTodo)
 	api.Post("/", handler.CreateTodo)
