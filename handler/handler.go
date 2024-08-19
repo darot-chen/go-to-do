@@ -4,7 +4,6 @@ import (
 	"github.com/darot-chen/go-to-do/databases"
 	"github.com/darot-chen/go-to-do/models"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 func GetTodo(c *fiber.Ctx) error {
@@ -14,11 +13,7 @@ func GetTodo(c *fiber.Ctx) error {
 
 	db.Find(&todos)
 
-	if len(todos) == 0 {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "No notes present", "data": nil})
-	}
-
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "success", "data": todos})
+	return c.JSON(fiber.Map{"status": "success", "message": "success", "data": todos})
 }
 
 func CreateTodo(c *fiber.Ctx) error {
@@ -31,11 +26,9 @@ func CreateTodo(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Data invalid", "data": err})
 	}
 
-	todo.ID = uuid.New()
-
-	err = db.Create(&todo).Error
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot create todo", "data": err})
+	result := db.Create(&todo)
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Cannot create todo", "data": result.Error})
 	}
 
 	return c.JSON(fiber.Map{"status": "success", "message": "Success", "data": todo})
@@ -53,8 +46,8 @@ func UpdateTodo(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	db.Find(&todo, "id = ?", id)
-	if todo.ID == uuid.Nil {
+	result := db.Find(&todo, id)
+	if result.Error != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Todo not found", "data": nil})
 	}
 
@@ -77,9 +70,9 @@ func DeleteTodo(c *fiber.Ctx) error {
 	todo := new(models.Todo)
 	id := c.Params("id")
 
-	db.Find(&todo, "id = ?", id)
+	result := db.Find(&todo, id)
 
-	if todo.ID == uuid.Nil {
+	if result.Error != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Todo not found", "data": nil})
 	}
 
